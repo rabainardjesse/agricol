@@ -1,4 +1,5 @@
 # igrow_app
+<<<<<<< HEAD
 
 A new Flutter project.
 
@@ -15,3 +16,6 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+=======
+Mobile app for smart agriculture system (Flutter)
+>>>>>>> 27b94cb93739b31cef8fb937f5f9d5112d6576a2
