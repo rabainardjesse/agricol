@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "744541386790",
+    "project_id": "igrow-app-49411",
+    "storage_bucket": "igrow-app-49411.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:744541386790:android:6a283a5867a2d8258b4ee7",
+        "android_client_info": {
+          "package_name": "com.example.igrow_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBhyrkCsN7YJT5IfuqIi4VIXozkdWR_Diw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
