@@ -12,6 +12,7 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  final plantController = TextEditingController(); // 🌱 NEW
 
   bool isLoading = false;
 
@@ -19,11 +20,14 @@ class _RegisterPageState extends State<RegisterPage> {
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
+    plantController.dispose();
     super.dispose();
   }
 
   void register() async {
-    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+    if (emailController.text.isEmpty ||
+        passwordController.text.isEmpty ||
+        plantController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please fill all fields")),
       );
@@ -51,12 +55,14 @@ class _RegisterPageState extends State<RegisterPage> {
           .set({
         'email': emailController.text.trim(),
         'uid': userCredential.user!.uid,
+        'plantName': plantController.text.trim(), // 🌱 NEW
         'createdAt': FieldValue.serverTimestamp(),
       });
 
       print("✅ Firestore save SUCCESS");
 
       if (!mounted) return;
+
       Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {
       print("❌ ERROR: $e");
@@ -90,6 +96,7 @@ class _RegisterPageState extends State<RegisterPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+
             TextField(
               controller: emailController,
               decoration: const InputDecoration(
@@ -97,7 +104,9 @@ class _RegisterPageState extends State<RegisterPage> {
                 border: OutlineInputBorder(),
               ),
             ),
+
             const SizedBox(height: 20),
+
             TextField(
               controller: passwordController,
               obscureText: true,
@@ -106,6 +115,18 @@ class _RegisterPageState extends State<RegisterPage> {
                 border: OutlineInputBorder(),
               ),
             ),
+
+            const SizedBox(height: 20),
+
+            // 🌱 PLANT NAME FIELD (NEW)
+            TextField(
+              controller: plantController,
+              decoration: const InputDecoration(
+                labelText: "Plant Name (e.g. Tomato)",
+                border: OutlineInputBorder(),
+              ),
+            ),
+
             const SizedBox(height: 20),
 
             ElevatedButton(

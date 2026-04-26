@@ -23,8 +23,6 @@ class DefaultFirebaseOptions {
         );
     }
   }
-
-  // ✅ ANDROID (YOU WERE MISSING THIS BEFORE)
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'YOUR_ANDROID_API_KEY',
     appId: 'YOUR_ANDROID_APP_ID',
@@ -58,4 +56,4 @@ class DefaultFirebaseOptions {
     projectId: 'igrow-app-49411',
     storageBucket: 'igrow-app-49411.firebasestorage.app',
   );
-}
+}  
