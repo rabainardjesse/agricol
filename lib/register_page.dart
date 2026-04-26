@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -12,6 +13,8 @@ class _RegisterPageState extends State<RegisterPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
+  bool isLoading = false;
+
   @override
   void dispose() {
     emailController.dispose();
@@ -20,18 +23,62 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   void register() async {
+    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please fill all fields")),
+      );
+      return;
+    }
+
+    setState(() => isLoading = true);
+
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      print("👉 Creating user...");
+
+      UserCredential userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
 
+      print("✅ Auth success: ${userCredential.user!.uid}");
+
+      print("👉 Saving to Firestore...");
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .set({
+        'email': emailController.text.trim(),
+        'uid': userCredential.user!.uid,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      print("✅ Firestore save SUCCESS");
+
+      if (!mounted) return;
       Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {
+      print("❌ ERROR: $e");
+
+      String message = "Something went wrong";
+
+      if (e is FirebaseAuthException) {
+        if (e.code == 'email-already-in-use') {
+          message = "Email already exists";
+        } else if (e.code == 'invalid-email') {
+          message = "Invalid email";
+        } else if (e.code == 'weak-password') {
+          message = "Password must be at least 6 characters";
+        }
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
+        SnackBar(content: Text(message)),
       );
     }
+
+    setState(() => isLoading = false);
   }
 
   @override
@@ -60,9 +107,12 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
             ),
             const SizedBox(height: 20),
+
             ElevatedButton(
-              onPressed: register,
-              child: const Text("Create Account"),
+              onPressed: isLoading ? null : register,
+              child: isLoading
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text("Create Account"),
             ),
           ],
         ),
