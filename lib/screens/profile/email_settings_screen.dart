@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'profile_security_pin_screen.dart';
 
 class EmailSettingsScreen extends StatefulWidget {
@@ -10,6 +11,45 @@ class EmailSettingsScreen extends StatefulWidget {
 
 class _EmailSettingsScreenState extends State<EmailSettingsScreen> {
   final TextEditingController _emailController = TextEditingController();
+  bool _isLoading = false;
+
+  void _sendVerification() async {
+    if (_emailController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Entre ton nouvel email !')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await user.verifyBeforeUpdateEmail(
+          _emailController.text.trim(),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Email de vérification envoyé ! Vérifie ta boîte.'),
+            backgroundColor: Color(0xFF316D4F),
+          ),
+        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const ProfileSecurityPinScreen(),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur: ${e.toString()}')),
+      );
+    }
+
+    setState(() => _isLoading = false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +138,7 @@ class _EmailSettingsScreenState extends State<EmailSettingsScreen> {
                           ),
                         ),
 
-                        const SizedBox(height: 80),
+                        const SizedBox(height: 60),
 
                         const Text(
                           'Enter The New Email Address',
@@ -142,7 +182,6 @@ class _EmailSettingsScreenState extends State<EmailSettingsScreen> {
 
                         const SizedBox(height: 50),
 
-                        // ── BOUTON NEXT STEP ─────────────────
                         Center(
                           child: SizedBox(
                             width: 169,
@@ -153,25 +192,21 @@ class _EmailSettingsScreenState extends State<EmailSettingsScreen> {
                                 shape: const StadiumBorder(),
                                 elevation: 0,
                               ),
-                              // ✅ Navigation vers Security Pin
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        const ProfileSecurityPinScreen(),
-                                  ),
-                                );
-                              },
-                              child: const Text(
-                                'Next Step',
-                                style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 15,
-                                  color: Color(0xFFFFFFFF),
-                                ),
-                              ),
+                              onPressed: _isLoading ? null : _sendVerification,
+                              child: _isLoading
+                                  ? const CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    )
+                                  : const Text(
+                                      'Next Step',
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 15,
+                                        color: Color(0xFFFFFFFF),
+                                      ),
+                                    ),
                             ),
                           ),
                         ),
@@ -218,25 +253,16 @@ class _EmailSettingsScreenState extends State<EmailSettingsScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-
             IconButton(
               onPressed: () {},
-              icon: const Icon(
-                Icons.home_outlined,
-                color: Color(0xFF316D4F),
-                size: 26,
-              ),
+              icon: const Icon(Icons.home_outlined,
+                  color: Color(0xFF316D4F), size: 26),
             ),
-
             IconButton(
               onPressed: () {},
-              icon: const Icon(
-                Icons.eco_outlined,
-                color: Color(0xFF316D4F),
-                size: 26,
-              ),
+              icon: const Icon(Icons.eco_outlined,
+                  color: Color(0xFF316D4F), size: 26),
             ),
-
             Container(
               width: 44,
               height: 44,
@@ -244,22 +270,14 @@ class _EmailSettingsScreenState extends State<EmailSettingsScreen> {
                 color: const Color(0xFFF2F8FF),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(
-                Icons.smart_toy_outlined,
-                color: Color(0xFF316D4F),
-                size: 24,
-              ),
+              child: const Icon(Icons.smart_toy_outlined,
+                  color: Color(0xFF316D4F), size: 24),
             ),
-
             IconButton(
               onPressed: () {},
-              icon: const Icon(
-                Icons.person,
-                color: Color(0xFF316D4F),
-                size: 26,
-              ),
+              icon: const Icon(Icons.person,
+                  color: Color(0xFF316D4F), size: 26),
             ),
-
           ],
         ),
       ),

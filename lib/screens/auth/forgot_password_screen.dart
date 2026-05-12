@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/auth_service.dart';
 import 'security_pin_screen.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -10,6 +11,50 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController _emailController = TextEditingController();
+  late final AuthService _authService;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _authService = AuthService();
+  }
+
+  void _sendResetEmail() async {
+    if (_emailController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Entre ton email !')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    String? error = await _authService.resetPassword(
+      _emailController.text.trim(),
+    );
+
+    setState(() => _isLoading = false);
+
+    if (error == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Email de réinitialisation envoyé !'),
+          backgroundColor: Color(0xFF316D4F),
+        ),
+      );
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const SecurityPinScreen(),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +63,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       body: Column(
         children: [
 
-          // ── HEADER VERT ──────────────────────────────────────
           const SizedBox(height: 60),
           const Text(
             'Forgot Password',
@@ -31,7 +75,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
           const SizedBox(height: 30),
 
-          // ── CARTE BLANCHE ────────────────────────────────────
           Expanded(
             child: Container(
               width: double.infinity,
@@ -45,7 +88,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               child: Stack(
                 children: [
 
-                  // ── CONTENU SCROLLABLE ───────────────────────
                   SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 30,
@@ -57,7 +99,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
                         const SizedBox(height: 20),
 
-                        // ── TITRE ────────────────────────────
                         const Text(
                           'Forgot Password?',
                           style: TextStyle(
@@ -70,7 +111,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
                         const SizedBox(height: 8),
 
-                        // ── DESCRIPTION ──────────────────────
                         const Text(
                           "Don't worry, it happens to the best of us! Enter your registered email address below. We'll send you a 6-digit verification code to securely log you into your account.",
                           style: TextStyle(
@@ -84,7 +124,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
                         const SizedBox(height: 40),
 
-                        // ── LABEL EMAIL ──────────────────────
                         const Text(
                           'Enter Email Address',
                           style: TextStyle(
@@ -97,7 +136,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
                         const SizedBox(height: 8),
 
-                        // ── CHAMP EMAIL ──────────────────────
                         Container(
                           height: 41,
                           decoration: BoxDecoration(
@@ -128,7 +166,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
                         const SizedBox(height: 40),
 
-                        // ── BOUTON NEXT STEP ─────────────────
                         Center(
                           child: SizedBox(
                             width: 169,
@@ -139,32 +176,27 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 shape: const StadiumBorder(),
                                 elevation: 0,
                               ),
-                              // ✅ Navigation vers SecurityPinScreen
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        const SecurityPinScreen(),
-                                  ),
-                                );
-                              },
-                              child: const Text(
-                                'Next Step',
-                                style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFFFFFFFF),
-                                ),
-                              ),
+                              onPressed: _isLoading ? null : _sendResetEmail,
+                              child: _isLoading
+                                  ? const CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    )
+                                  : const Text(
+                                      'Next Step',
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFFFFFFFF),
+                                      ),
+                                    ),
                             ),
                           ),
                         ),
 
                         const SizedBox(height: 80),
 
-                        // ── DON'T HAVE AN ACCOUNT? ───────────
                         Center(
                           child: Text.rich(
                             TextSpan(
@@ -197,7 +229,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
                         const SizedBox(height: 16),
 
-                        // ── BOUTON SIGN UP ───────────────────
                         Center(
                           child: SizedBox(
                             width: 169,
@@ -227,7 +258,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                   ),
 
-                  // ── FLECHE RETOUR ────────────────────────────
                   Positioned(
                     bottom: 20,
                     left: 18,

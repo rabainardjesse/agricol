@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class PasswordSettingsScreen extends StatefulWidget {
   const PasswordSettingsScreen({super.key});
@@ -12,10 +13,76 @@ class _PasswordSettingsScreenState extends State<PasswordSettingsScreen> {
   final TextEditingController _currentPassController = TextEditingController();
   final TextEditingController _newPassController     = TextEditingController();
   final TextEditingController _confirmPassController = TextEditingController();
-
   bool _obscureCurrent = true;
   bool _obscureNew     = true;
   bool _obscureConfirm = true;
+  bool _isLoading      = false;
+
+  void _changePassword() async {
+    if (_currentPassController.text.isEmpty ||
+        _newPassController.text.isEmpty ||
+        _confirmPassController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Remplis tous les champs !')),
+      );
+      return;
+    }
+
+    if (_newPassController.text != _confirmPassController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Les nouveaux mots de passe ne correspondent pas !'),
+        ),
+      );
+      return;
+    }
+
+    if (_newPassController.text.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Le mot de passe doit avoir au moins 6 caractères !'),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null && user.email != null) {
+
+        // Re-authentifier l'utilisateur
+        final credential = EmailAuthProvider.credential(
+          email: user.email!,
+          password: _currentPassController.text.trim(),
+        );
+        await user.reauthenticateWithCredential(credential);
+
+        // Changer le mot de passe
+        await user.updatePassword(_newPassController.text.trim());
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Mot de passe changé avec succès !'),
+            backgroundColor: Color(0xFF316D4F),
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      String message = 'Erreur lors du changement.';
+      if (e.toString().contains('wrong-password') ||
+          e.toString().contains('invalid-credential')) {
+        message = 'Mot de passe actuel incorrect !';
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    }
+
+    setState(() => _isLoading = false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +91,6 @@ class _PasswordSettingsScreenState extends State<PasswordSettingsScreen> {
       body: Column(
         children: [
 
-          // ── HEADER VERT ──────────────────────────────────────
           const SizedBox(height: 50),
 
           Stack(
@@ -58,7 +124,6 @@ class _PasswordSettingsScreenState extends State<PasswordSettingsScreen> {
 
           const SizedBox(height: 30),
 
-          // ── CARTE VERTE CLAIRE ───────────────────────────────
           Expanded(
             child: Container(
               width: double.infinity,
@@ -81,7 +146,6 @@ class _PasswordSettingsScreenState extends State<PasswordSettingsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
 
-                        // ── CURRENT PASSWORD ─────────────────
                         const Text(
                           'Current Password',
                           style: TextStyle(
@@ -102,7 +166,6 @@ class _PasswordSettingsScreenState extends State<PasswordSettingsScreen> {
 
                         const SizedBox(height: 20),
 
-                        // ── NEW PASSWORD ─────────────────────
                         const Text(
                           'New Password',
                           style: TextStyle(
@@ -123,7 +186,6 @@ class _PasswordSettingsScreenState extends State<PasswordSettingsScreen> {
 
                         const SizedBox(height: 20),
 
-                        // ── CONFIRM NEW PASSWORD ─────────────
                         const Text(
                           'Confirm New Password',
                           style: TextStyle(
@@ -144,7 +206,6 @@ class _PasswordSettingsScreenState extends State<PasswordSettingsScreen> {
 
                         const SizedBox(height: 60),
 
-                        // ── BOUTON CHANGE PASSWORD ───────────
                         Center(
                           child: SizedBox(
                             width: 218,
@@ -155,16 +216,21 @@ class _PasswordSettingsScreenState extends State<PasswordSettingsScreen> {
                                 shape: const StadiumBorder(),
                                 elevation: 0,
                               ),
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text(
-                                'Change Password',
-                                style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 15,
-                                  color: Color(0xFFFFFFFF),
-                                ),
-                              ),
+                              onPressed: _isLoading ? null : _changePassword,
+                              child: _isLoading
+                                  ? const CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    )
+                                  : const Text(
+                                      'Change Password',
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 15,
+                                        color: Color(0xFFFFFFFF),
+                                      ),
+                                    ),
                             ),
                           ),
                         ),
@@ -174,7 +240,6 @@ class _PasswordSettingsScreenState extends State<PasswordSettingsScreen> {
                     ),
                   ),
 
-                  // ── FLECHE RETOUR BAS ────────────────────────
                   Positioned(
                     bottom: 20,
                     left: 18,
@@ -195,7 +260,6 @@ class _PasswordSettingsScreenState extends State<PasswordSettingsScreen> {
         ],
       ),
 
-      // ── BOTTOM NAV BAR ───────────────────────────────────────
       bottomNavigationBar: Container(
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         height: 64,
@@ -213,25 +277,16 @@ class _PasswordSettingsScreenState extends State<PasswordSettingsScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-
             IconButton(
               onPressed: () {},
-              icon: const Icon(
-                Icons.home_outlined,
-                color: Color(0xFF316D4F),
-                size: 26,
-              ),
+              icon: const Icon(Icons.home_outlined,
+                  color: Color(0xFF316D4F), size: 26),
             ),
-
             IconButton(
               onPressed: () {},
-              icon: const Icon(
-                Icons.eco_outlined,
-                color: Color(0xFF316D4F),
-                size: 26,
-              ),
+              icon: const Icon(Icons.eco_outlined,
+                  color: Color(0xFF316D4F), size: 26),
             ),
-
             Container(
               width: 44,
               height: 44,
@@ -239,29 +294,20 @@ class _PasswordSettingsScreenState extends State<PasswordSettingsScreen> {
                 color: const Color(0xFFF2F8FF),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(
-                Icons.smart_toy_outlined,
-                color: Color(0xFF316D4F),
-                size: 24,
-              ),
+              child: const Icon(Icons.smart_toy_outlined,
+                  color: Color(0xFF316D4F), size: 24),
             ),
-
             IconButton(
               onPressed: () {},
-              icon: const Icon(
-                Icons.person,
-                color: Color(0xFF316D4F),
-                size: 26,
-              ),
+              icon: const Icon(Icons.person,
+                  color: Color(0xFF316D4F), size: 26),
             ),
-
           ],
         ),
       ),
     );
   }
 
-  // ── WIDGET CHAMP PASSWORD ────────────────────────────────────
   Widget _buildPasswordField({
     required TextEditingController controller,
     required bool obscure,

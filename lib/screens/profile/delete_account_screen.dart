@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../auth/login_screen.dart';
 
 class DeleteAccountScreen extends StatefulWidget {
@@ -11,6 +12,53 @@ class DeleteAccountScreen extends StatefulWidget {
 class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isLoading = false;
+
+  void _deleteAccount() async {
+    if (_passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Entre ton mot de passe !')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null && user.email != null) {
+
+        // Re-authentifier
+        final credential = EmailAuthProvider.credential(
+          email: user.email!,
+          password: _passwordController.text.trim(),
+        );
+        await user.reauthenticateWithCredential(credential);
+
+        // Supprimer le compte
+        await user.delete();
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const LoginScreen(),
+          ),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      String message = 'Erreur lors de la suppression.';
+      if (e.toString().contains('wrong-password') ||
+          e.toString().contains('invalid-credential')) {
+        message = 'Mot de passe incorrect !';
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    }
+
+    setState(() => _isLoading = false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +147,6 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: const [
-
                               Text(
                                 'This action will permanently delete all of your data, and you will not be able to recover it. Please keep the following in mind before proceeding:',
                                 style: TextStyle(
@@ -110,14 +157,11 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                                   height: 1.4,
                                 ),
                               ),
-
                               SizedBox(height: 12),
-
                               Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    '• ',
+                                  Text('• ',
                                     style: TextStyle(
                                       fontFamily: 'Poppins',
                                       fontSize: 13,
@@ -138,14 +182,11 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                                   ),
                                 ],
                               ),
-
                               SizedBox(height: 8),
-
                               Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    '• ',
+                                  Text('• ',
                                     style: TextStyle(
                                       fontFamily: 'Poppins',
                                       fontSize: 13,
@@ -166,7 +207,6 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                                   ),
                                 ],
                               ),
-
                             ],
                           ),
                         ),
@@ -251,24 +291,21 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                               shape: const StadiumBorder(),
                               elevation: 0,
                             ),
-                            onPressed: () {
-                              Navigator.pushAndRemoveUntil(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const LoginScreen(),
-                                ),
-                                (route) => false,
-                              );
-                            },
-                            child: const Text(
-                              'Yes, Delete Account',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontWeight: FontWeight.w500,
-                                fontSize: 15,
-                                color: Color(0xFFFFFFFF),
-                              ),
-                            ),
+                            onPressed: _isLoading ? null : _deleteAccount,
+                            child: _isLoading
+                                ? const CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  )
+                                : const Text(
+                                    'Yes, Delete Account',
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 15,
+                                      color: Color(0xFFFFFFFF),
+                                    ),
+                                  ),
                           ),
                         ),
 
@@ -297,7 +334,6 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                         ),
 
                         const SizedBox(height: 80),
-
                       ],
                     ),
                   ),
@@ -339,25 +375,16 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-
             IconButton(
               onPressed: () {},
-              icon: const Icon(
-                Icons.home_outlined,
-                color: Color(0xFF316D4F),
-                size: 26,
-              ),
+              icon: const Icon(Icons.home_outlined,
+                  color: Color(0xFF316D4F), size: 26),
             ),
-
             IconButton(
               onPressed: () {},
-              icon: const Icon(
-                Icons.eco_outlined,
-                color: Color(0xFF316D4F),
-                size: 26,
-              ),
+              icon: const Icon(Icons.eco_outlined,
+                  color: Color(0xFF316D4F), size: 26),
             ),
-
             Container(
               width: 44,
               height: 44,
@@ -365,22 +392,14 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
                 color: const Color(0xFFF2F8FF),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(
-                Icons.smart_toy_outlined,
-                color: Color(0xFF316D4F),
-                size: 24,
-              ),
+              child: const Icon(Icons.smart_toy_outlined,
+                  color: Color(0xFF316D4F), size: 24),
             ),
-
             IconButton(
               onPressed: () {},
-              icon: const Icon(
-                Icons.person,
-                color: Color(0xFF316D4F),
-                size: 26,
-              ),
+              icon: const Icon(Icons.person,
+                  color: Color(0xFF316D4F), size: 26),
             ),
-
           ],
         ),
       ),
